@@ -17,7 +17,7 @@ django나 flask로 API를 못만드는 것은 아니다. 다만, API를 작성�
 
 <hr>
 
-### unicorn이란?
+### uvicorn이란?
 uvicorn은 async/await을 기반한 비동기 프로그래밍 지원, 퍼포먼스가 가장 좋다고 알려진 ASGI이다.
 본 페이지 내, 실행 결과에 대해 확인하기 위한 용도로 설치
 
