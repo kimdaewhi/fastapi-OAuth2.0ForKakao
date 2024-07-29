@@ -1,15 +1,15 @@
 from datetime import date
 from pydantic import BaseModel
 
-class MemberBase(BaseModel):
+class UserBase(BaseModel):
     access_token: str
     expired_date: date
     access_token_type: str
     expires_in: int
 
-class MemberCreate(MemberBase):
+class UserCreate(UserBase):
     pass
 
-class MemberResponse(MemberBase):
+class UserResponse(UserBase):
     class Config:
         orm_mode = True

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.schemas.member import MemberCreate, MemberResponse
-from app.models.member import Member
+from app.schemas.user import UserCreate, UserResponse
+from app.models.user import User
 from datetime import datetime, timedelta
 from typing import List
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ api_keys_db = {
         "appsecret": "DZxy0nVMEmkDEaEg4bVqmpjA4z+eWQ6kZ/z4hs68UGKgSP/GRIQ9xPqW01hQba15Jx7L73snAAdfJ+iiyypXuRDgrppTgWWtVg84BGzxHQFf60E3YxMyX1GTizCzUV4Zsns40rUwaZYVHYOpXuwcWVyL9sEEazNY+caPNc4iE17KfwEtGM4="
     },    
 }
-members_db: List[Member] = []
+members_db: List[User] = []
 
 # ===========================================================================================
 
@@ -52,7 +52,7 @@ def register(request: RegisterRequest):
 
 
 # 한투 - access token 발급(간편인증)
-@router.post("/simpleAuth", response_model=MemberResponse)
+@router.post("/simpleAuth", response_model=UserResponse)
 def execSimpleAuth(request: SimpleAuthRequest):
     if request.username not in api_keys_db:
         raise HTTPException(status_code=404, detail="User not found")
@@ -84,7 +84,7 @@ def execSimpleAuth(request: SimpleAuthRequest):
             
             # error_code 키가 없으면
             else:
-                new_member = Member(
+                new_member = User(
                     access_token = auth_data["access_token"],
                     expired_date = datetime.strptime(auth_data["access_token_token_expired"], "%Y-%m-%d %H:%M:%S").date(),
                     access_token_type = auth_data["token_type"],
@@ -105,7 +105,7 @@ def execSimpleAuth(request: SimpleAuthRequest):
 
 
 # 한투 - access token 발급(API Key, Secret 사용)
-@router.post("/getAccessToken", response_model=MemberResponse)
+@router.post("/getAccessToken", response_model=UserResponse)
 def getAccessToken(request: LoginRequest):
     try:
         response = requests.post(f"{demoInvUrl}/oauth2/tokenP", json={
@@ -129,7 +129,7 @@ def getAccessToken(request: LoginRequest):
             
             # error_code 키가 없으면
             else:
-                new_member = Member(
+                new_member = User(
                     access_token = auth_data["access_token"],
                     expired_date = datetime.strptime(auth_data["access_token_token_expired"], "%Y-%m-%d %H:%M:%S").date(),
                     access_token_type = auth_data["token_type"],
