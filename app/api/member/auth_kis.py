@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import RedirectResponse
 from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
 from datetime import datetime, timedelta
@@ -10,18 +11,18 @@ import logging
 
 router = APIRouter()
 
-realInvUrl = "https://openapi.koreainvestment.com:9443"
-demoInvUrl = "https://openapivts.koreainvestment.com:29443"
+REAL_INV_URL = "https://openapi.koreainvestment.com:9443"
+DEMO_INV_URL = "https://openapivts.koreainvestment.com:29443"
 
 # ===========================================================================================
 # 일단은 In-Memory storage에 저장... 추후에 DB로 관리
-api_keys_db = {
+API_KEYS_DB = {
     "kimdaewhi": {
         "appkey": "PS2ZuCSGIUOU4R0M3UYVxaWsDMSYYecvAtYV",
         "appsecret": "DZxy0nVMEmkDEaEg4bVqmpjA4z+eWQ6kZ/z4hs68UGKgSP/GRIQ9xPqW01hQba15Jx7L73snAAdfJ+iiyypXuRDgrppTgWWtVg84BGzxHQFf60E3YxMyX1GTizCzUV4Zsns40rUwaZYVHYOpXuwcWVyL9sEEazNY+caPNc4iE17KfwEtGM4="
     },    
 }
-members_db: List[User] = []
+MEMBERS_DB: List[User] = []
 
 # ===========================================================================================
 
@@ -41,9 +42,9 @@ class SimpleAuthRequest(BaseModel):
 # 한투 - 유저 등록
 @router.post("/register", status_code=201)
 def register(request: RegisterRequest):
-    if request.username in api_keys_db:
+    if request.username in API_KEYS_DB:
         raise HTTPException(status_code=400, detail="Username already exists")
-    api_keys_db[request.username] = {
+    API_KEYS_DB[request.username] = {
         "api_key": request.api_key,
         "api_secret": request.api_secret
     }
@@ -52,17 +53,17 @@ def register(request: RegisterRequest):
 
 
 # 한투 - access token 발급(간편인증)
-@router.post("/simpleAuth", response_model=UserResponse)
+@router.post("/getAccessTokenByKakao", response_model=UserResponse)
 def execSimpleAuth(request: SimpleAuthRequest):
-    if request.username not in api_keys_db:
+    if request.username not in API_KEYS_DB:
         raise HTTPException(status_code=404, detail="User not found")
     
-    user_api_info = api_keys_db[request.username]
+    user_api_info = API_KEYS_DB[request.username]
     user_appkey = user_api_info["appkey"]
     user_appsecret = user_api_info["appsecret"]
 
     try:
-        response = requests.post(f"{demoInvUrl}/oauth2/tokenP", json={
+        response = requests.post(f"{DEMO_INV_URL}/oauth2/tokenP", json={
             "grant_type": "client_credentials",
             "appkey": user_appkey,
             "appsecret": user_appsecret
@@ -91,7 +92,7 @@ def execSimpleAuth(request: SimpleAuthRequest):
                     expires_in = auth_data["expires_in"]
                 )
 
-            members_db.append(new_member)
+            MEMBERS_DB.append(new_member)
             return new_member
         
         else:
@@ -108,7 +109,7 @@ def execSimpleAuth(request: SimpleAuthRequest):
 @router.post("/getAccessToken", response_model=UserResponse)
 def getAccessToken(request: LoginRequest):
     try:
-        response = requests.post(f"{demoInvUrl}/oauth2/tokenP", json={
+        response = requests.post(f"{DEMO_INV_URL}/oauth2/tokenP", json={
             "grant_type": "client_credentials",
             "appkey": request.api_key,
             "appsecret": request.api_secret
@@ -136,7 +137,7 @@ def getAccessToken(request: LoginRequest):
                     expires_in = auth_data["expires_in"]
                 )
 
-            members_db.append(new_member)
+            MEMBERS_DB.append(new_member)
 
             return new_member
         else:
