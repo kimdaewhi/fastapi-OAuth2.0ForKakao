@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
+from app.schemas.kakaoAuth import TokenRequest, TokenResponse
 import requests
 import logging
 
@@ -10,9 +11,9 @@ AUTHORIZE_ENDPOINT = "https://kauth.kakao.com/oauth/authorize"
 ACCESS_TOKEN_ENDPOINT = "https://kauth.kakao.com/oauth/token"
 
 # 카카오 간편인증 - 인가 코드 받기
-@router.get("/kakao/authorize")
+@router.get("/authorize")
 def getAuthCode(redirect_uri: str = Query(..., alias="redirect_uri"), api_key: str = Query(..., alias="api_key")):
-    logging.info("GET /getAuthCode called")
+    logging.info("GET /getAuthCode 호출")
 
     # 카카오 인증 url로 get 요청
     try:
@@ -28,4 +29,21 @@ def getAuthCode(redirect_uri: str = Query(..., alias="redirect_uri"), api_key: s
         logging.error(f"카카오 인증 요청에 실패하였습니다 : {e}")
         raise HTTPException(status_code=500, detail="인증 실패")
 
-# @router.get("/kakao/callback")
+@router.post("/accessToken")
+def getAccessToken(token_request: TokenRequest):
+    logging.info("POST /getAccessToken 호출")
+
+    try:
+        response = requests.post(
+            ACCESS_TOKEN_ENDPOINT,
+            data=token_request.dict(exclude_none=True)
+        )
+        response.raise_for_status()
+
+        token_response = response.json()
+
+        return JSONResponse(content=token_response)
+
+    except requests.RequestException as e:
+        logging.error(f"Access Token 발급에 실패하였습니다 : {e}")
+        raise HTTPException(status_code=500, detail="Access Token 발급 실패")

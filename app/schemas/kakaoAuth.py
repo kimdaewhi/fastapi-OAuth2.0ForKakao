@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 class TokenRequest(BaseModel):
-    grant_type: str = Field(default="authorization_code", const=True)   # authorization_code 고정
+    grant_type: str = Field(default="authorization_code", Literal=True)   # authorization_code 고정
     client_id: str                                                      # REST API 키
     redirect_uri: str                                                   # 인가코드가 Redirect된 URI
     code: str                                                           # 인가코드 받기 요청으로 얻은 인가코드
