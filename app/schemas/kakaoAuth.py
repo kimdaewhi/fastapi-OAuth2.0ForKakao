@@ -13,6 +13,6 @@ class TokenResponse(BaseModel):
     access_token: str
     id_token: str = None
     expires_in: int
-    refresh_token: str
+    refresh_token: str 
     refresh_token_expires_in: int
     scope: str = None
